@@ -1,0 +1,62 @@
+name: Build and Release Rulebooks
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-rulebooks:
+    name: Compile Typst PDFs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Typst
+        uses: typst-community/setup-typst@v3
+
+      - name: Compile Rulebooks
+        run: |
+          mkdir -p release
+          echo "Compiling Book 1: Core Rules..."
+          typst compile --root . books/01_core_rules/main.typ release/Gang_Showdown_01_Core_Rules.pdf
+          
+          echo "Compiling Book 2: Gang Creation..."
+          typst compile --root . books/02_gang_creation/main.typ release/Gang_Showdown_02_Gang_Creation.pdf
+          
+          echo "Compiling Book 3: Campaign Rules..."
+          typst compile --root . books/03_campaign_rules/main.typ release/Gang_Showdown_03_Campaign_Rules.pdf
+          
+          echo "Build completed. Artifacts:"
+          ls -lh release/
+
+      - name: Upload PDF Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gang-showdown-rulebooks-pdf
+          path: release/*.pdf
+          if-no-files-found: error
+
+      - name: Publish GitHub Release (on tag or manual dispatch)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Gang Showdown Release ${{ github.ref_name }}"
+          tag_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release/Gang_Showdown_01_Core_Rules.pdf
+            release/Gang_Showdown_02_Gang_Creation.pdf
+            release/Gang_Showdown_03_Campaign_Rules.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

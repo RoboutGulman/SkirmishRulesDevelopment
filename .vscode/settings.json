@@ -1,0 +1,12 @@
+{
+  "tinymist.preview.fontPaths": [],
+  "tinymist.serverPath": "",
+  "[typst]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": true,
+      "other": true
+    }
+  }
+}
